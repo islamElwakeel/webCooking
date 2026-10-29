@@ -26,6 +26,6 @@ const IMAGES = {
   'فاصوليا باللحمة': 'beans', 'طاجن أرز معمر': 'rice-tagine', 'بسلة بالجزر واللحمة': 'peas',
   'طاجن بامية باللحمة': 'okra-tagine', 'طاجن لحمة بالبصل': 'onion-tagine',
 };
-for (const x of SEED) if (IMAGES[x.name]) x.image = `images/${IMAGES[x.name]}.jpg`;
+for (const x of SEED) if (IMAGES[x.name]) x.image = `images/${IMAGES[x.name]}.jpg?v=3`;
 // Bump when SEED changes so demo devices reload it.
-export const SEED_VERSION = 2;
+export const SEED_VERSION = 3;
