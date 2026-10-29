@@ -14,10 +14,10 @@
 <main class="page" id="view"></main>
 <div id="sheet"></div>
 <script type="module">
-import { DEMO, listItems, saveItem, deleteItem, seedFirebase, onAdmin, login, logout, resizeImage, money, esc } from './app.js';
+import { DEMO, listItems, saveItem, deleteItem, seedFirebase, onAdmin, login, logout, resizeImage, money, esc, getSettings, saveSettings, normalizePhone } from './app.js';
 
 const $ = s => document.querySelector(s), view = $('#view');
-let items = [];
+let items = [], settings;
 const toast = t => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; d.style.bottom = '24px'; document.body.append(d); setTimeout(() => d.remove(), 1800); };
 
 function loginView() {
@@ -30,12 +30,15 @@ function loginView() {
 }
 
 async function list() {
-  items = await listItems();
+  [items, settings] = await Promise.all([listItems(), getSettings()]);
   const hidden = items.filter(x => x.hidden).length;
   view.innerHTML = `<div class="top"><h1>لوحة التحكم</h1><div class="row"><a class="btn ghost small" href="index.html">شوف المنيو</a>${DEMO ? '' : '<button class="btn ghost small" id="out">خروج</button>'}</div></div>
     ${DEMO ? '<p class="note">وضع تجربة: التعديلات محفوظة على الجهاز ده بس. عشان الزباين يشوفوها لازم تربط Firebase (شوف README).</p>' : ''}
     <div class="row"><div class="card grow" style="padding:10px">الأصناف<br><b class="num" style="font-size:22px">${items.length}</b></div>
       <div class="card grow" style="padding:10px">مخفي<br><b class="num" style="font-size:22px">${hidden}</b></div></div>
+    <form id="wa" class="card" style="padding:12px;display:grid;gap:8px">
+      <label class="f">رقم الواتساب اللي الطلبات بتوصل عليه<input id="wan" type="tel" inputmode="tel" dir="ltr" value="${esc(settings.whatsapp)}" placeholder="01012345678"></label>
+      <p class="err" id="waer"></p><button class="btn dark small">احفظ الرقم</button></form>
     <button class="btn" id="new">+ صنف جديد</button>
     ${!items.length && !DEMO ? '<button class="btn ghost" id="seed">ضيف الأصناف الجاهزة (١٣ صنف)</button>' : ''}
     ${items.map(it => `<div class="card item" style="cursor:default">
@@ -45,6 +48,11 @@ async function list() {
       <div style="display:grid;gap:4px"><button class="btn ghost small" data-e="${it.id}">تعديل</button>
         <button class="btn ghost small" data-h="${it.id}">${it.hidden ? 'إظهار' : 'إخفاء'}</button></div></div>`).join('')}`;
   $('#new').onclick = () => form();
+  $('#wa').onsubmit = async e => { e.preventDefault();
+    const n = normalizePhone($('#wan').value);
+    if (!n) return $('#waer').textContent = 'الرقم مش صح. اكتبه كده: 01012345678';
+    try { await saveSettings({ ...settings, whatsapp: n }); $('#waer').textContent = ''; $('#wan').value = n; toast('رقم الواتساب اتحفظ'); }
+    catch { $('#waer').textContent = 'الحفظ فشل، جرّب تاني'; } };
   $('#out') && ($('#out').onclick = logout);
   $('#seed') && ($('#seed').onclick = async () => { $('#seed').disabled = true; await seedFirebase(); list(); });
 }

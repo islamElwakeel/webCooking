@@ -88,7 +88,28 @@ export function orderMessage({ rows, total, unpriced }, c) {
     `الاسم: ${c.name}`, `الموبايل: ${c.phone}`, `العنوان: ${c.address}`,
     c.date ? `يوم التسليم: ${c.date}` : '', c.notes ? `ملاحظات: ${c.notes}` : ''].filter((x, i, a) => x !== '' || a[i - 1] !== '').join('\n').trim();
 }
-export const whatsappUrl = text => `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+export const whatsappUrl = (number, text) => `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
+
+// Kitchen settings (WhatsApp number), stored next to the items.
+export async function getSettings() {
+  const def = { whatsapp: WHATSAPP_NUMBER };
+  if (DEMO) return { ...def, ...ls.get('settings', {}) };
+  const { fs, db } = await firebase();
+  const d = await fs.getDoc(fs.doc(db, 'settings', 'main'));
+  return { ...def, ...(d.exists() ? d.data() : {}) };
+}
+export async function saveSettings(s) {
+  if (DEMO) return ls.set('settings', s);
+  const { fs, db } = await firebase();
+  await fs.setDoc(fs.doc(db, 'settings', 'main'), s);
+}
+// Accepts 010..., +20 10..., 0020..., spaces/dashes; returns 2010... or null.
+export function normalizePhone(v) {
+  let d = String(v).replace(/[٠-٩]/g, c => '٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/\D/g, '');
+  if (d.startsWith('00')) d = d.slice(2);
+  if (d.startsWith('0')) d = '20' + d.slice(1);
+  return /^\d{10,15}$/.test(d) ? d : null;
+}
 
 // Resize a picked photo so it fits inside a Firestore doc (1MB max).
 export function resizeImage(file, max = 700) {

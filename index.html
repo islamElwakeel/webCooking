@@ -19,10 +19,10 @@
 </nav>
 <div id="sheet"></div>
 <script type="module">
-import { KITCHEN_NAME, listItems, cart, cartTotals, orderMessage, whatsappUrl, money, esc, ls } from './app.js';
+import { KITCHEN_NAME, listItems, cart, cartTotals, orderMessage, whatsappUrl, getSettings, money, esc, ls } from './app.js';
 
 const $ = s => document.querySelector(s), view = $('#view');
-let items = [], filter = 'الكل';
+let items = [], settings, filter = 'الكل';
 const TYPES = ['الكل', 'طبق', 'طاجن', 'صينية'];
 const thumb = (it, cls = 'thumb') => `<div class="${cls}" style="${it.image ? `background-image:url('${it.image}')` : ''}">${it.image ? '' : '🍲'}</div>`;
 const fromPrice = it => { const p = it.sizes.map(s => s.price).filter(x => x != null && x !== '');
@@ -87,7 +87,7 @@ function cartView() {
     e.preventDefault();
     const c = Object.fromEntries(['name', 'phone', 'address', 'date', 'notes'].map(k => [k, $('#' + k).value.trim()]));
     ls.set('me', $('#save').checked ? { name: c.name, phone: c.phone, address: c.address } : {});
-    location.href = whatsappUrl(orderMessage(cartTotals(cart.get(), items), c));
+    location.href = whatsappUrl(settings.whatsapp, orderMessage(cartTotals(cart.get(), items), c));
   };
 }
 
@@ -118,7 +118,7 @@ view.onclick = e => {
 };
 addEventListener('hashchange', route);
 view.innerHTML = '<p class="empty">جاري التحميل…</p>';
-try { items = await listItems(); route(); }
+try { [items, settings] = await Promise.all([listItems(), getSettings()]); route(); }
 catch (e) { view.innerHTML = '<p class="empty">مقدرناش نحمّل المنيو. اتأكد من النت وجرّب تاني.</p>'; console.error(e); }
 </script>
 </body>
