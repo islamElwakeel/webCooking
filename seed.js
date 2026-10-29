@@ -20,3 +20,12 @@ export const SEED = [
   d('مكرونة بينك صوص وكوردن بلو', 'طبق', 'طبق مكرونة بينك صوص وقطعتين كوردن بلو'),
   d('بيكاتا لحم', 'طبق', 'أرز أبيض مصري مع قطعتين ستيك بصوص البيكاتا والمشروم'),
 ];
+
+const IMAGES = {
+  'بيكاتا فراخ': 'chicken-piccata', 'نجرسكو': 'negresco', 'فتة باللحمة': 'fatta', 'لوبيا باللحمة': 'black-eyed-peas',
+  'فاصوليا باللحمة': 'beans', 'طاجن أرز معمر': 'rice-tagine', 'بسلة بالجزر واللحمة': 'peas',
+  'طاجن بامية باللحمة': 'okra-tagine', 'طاجن لحمة بالبصل': 'onion-tagine',
+};
+for (const x of SEED) if (IMAGES[x.name]) x.image = `images/${IMAGES[x.name]}.jpg`;
+// Bump when SEED changes so demo devices reload it.
+export const SEED_VERSION = 2;

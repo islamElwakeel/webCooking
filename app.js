@@ -20,15 +20,18 @@ async function firebase() {
 }
 
 export async function listItems() {
-  if (DEMO) return ls.get('items', null) ?? seedDemo();
+  if (DEMO) {
+    const { SEED_VERSION } = await import('./seed.js');
+    return ls.get('seedVersion', 0) === SEED_VERSION && ls.get('items', null) || seedDemo();
+  }
   const { fs, db } = await firebase();
   const snap = await fs.getDocs(fs.collection(db, 'items'));
   return snap.docs.map(x => ({ id: x.id, ...x.data() })).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 async function seedDemo() {
-  const { SEED } = await import('./seed.js');
+  const { SEED, SEED_VERSION } = await import('./seed.js');
   const items = SEED.map((x, i) => ({ ...x, id: 'i' + i, order: i }));
-  ls.set('items', items);
+  ls.set('items', items); ls.set('seedVersion', SEED_VERSION);
   return items;
 }
 export async function saveItem(item) {
