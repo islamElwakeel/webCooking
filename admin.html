@@ -14,7 +14,7 @@
 <main class="page" id="view"></main>
 <div id="sheet"></div>
 <script type="module">
-import { DEMO, listItems, saveItem, deleteItem, seedFirebase, onAdmin, login, logout, resizeImage, money, esc, getSettings, saveSettings, normalizePhone } from './app.js';
+import { TYPES, DEMO, listItems, saveItem, deleteItem, seedFirebase, onAdmin, login, logout, resizeImage, money, esc, getSettings, saveSettings, normalizePhone } from './app.js';
 
 const $ = s => document.querySelector(s), view = $('#view');
 let items = [], settings;
@@ -74,7 +74,7 @@ function form(it = { name: '', type: 'طبق', description: '', ingredients: '',
     <div class="line"><h2>${it.id ? 'تعديل صنف' : 'صنف جديد'}</h2><button type="button" class="btn ghost small" id="x">إلغاء</button></div>
     <label class="f">الصورة<div class="row"><div class="thumb" id="pv" style="${image ? `background-image:url('${image}')` : ''}">${image ? '' : '📷'}</div><input type="file" id="img" accept="image/*"></div></label>
     <label class="f">اسم الصنف<input id="name" required value="${esc(it.name)}"></label>
-    <label class="f">النوع<select id="type">${['طبق', 'طاجن', 'صينية'].map(t => `<option ${t === it.type ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+    <label class="f">النوع<select id="type">${Object.keys(TYPES).map(t => `<option value="${t}" ${t === it.type ? 'selected' : ''}>${t} (${TYPES[t]})</option>`).join('')}</select></label>
     <label class="f">تفاصيل الطبق<textarea id="description">${esc(it.description)}</textarea></label>
     <label class="f">المكونات<textarea id="ingredients">${esc(it.ingredients)}</textarea></label>
     <label class="f">الوزن<input id="weight" placeholder="مثلاً ٥٠٠ جرام" value="${esc(it.weight)}"></label>

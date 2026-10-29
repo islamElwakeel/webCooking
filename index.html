@@ -19,11 +19,10 @@
 </nav>
 <div id="sheet"></div>
 <script type="module">
-import { listItems, cart, cartTotals, orderMessage, whatsappUrl, getSettings, money, esc, ls } from './app.js';
+import { TYPES, listItems, cart, cartTotals, orderMessage, whatsappUrl, getSettings, money, esc, ls } from './app.js';
 
 const $ = s => document.querySelector(s), view = $('#view');
 let items = [], settings, filter = 'الكل';
-const TYPES = ['الكل', 'طبق', 'طاجن', 'صينية'];
 const thumb = (it, cls = 'thumb') => `<div class="${cls}" style="${it.image ? `background-image:url('${it.image}')` : ''}">${it.image ? '' : '🍲'}</div>`;
 const fromPrice = it => { const p = it.sizes.map(s => s.price).filter(x => x != null && x !== '');
   return p.length ? (it.sizes.length > 1 ? 'من ' : '') + money(Math.min(...p)) : money(null); };
@@ -34,8 +33,8 @@ function menu() {
   const list = items.filter(x => !x.hidden && (filter === 'الكل' || x.type === filter));
   view.innerHTML = `<div class="brand"><img src="images/avatar.jpg" alt=""><div><h1>مطبخ <b>لولي</b> ♥</h1><p>من قلبي لبيتك</p></div></div>
     <div class="perks"><span>🏠 أطباق منزلية</span><span>🌿 مكونات طازجة</span><span>♥ مطبخ نظيف</span><span>🍽 للعائلات والعزومات</span></div>
-    <p class="mut">كل الأكل بيتعمل مخصوص ليك، اطلب قبلها بيوم</p>
-    <div class="chips">${TYPES.map(t => `<button class="chip ${t === filter ? 'on' : ''}" data-f="${t}">${t === 'الكل' ? t : t === 'صينية' ? 'صواني' : t === 'طاجن' ? 'طواجن' : 'أطباق'}</button>`).join('')}</div>
+    <p class="mut">كل الأكل بيتعمل مخصوص ليك، الأطباق بتتطلب قبلها بيوم، والسندوتشات بتجهز خلال ساعتين</p>
+    <div class="chips">${['الكل', ...Object.keys(TYPES)].map(t => `<button class="chip ${t === filter ? 'on' : ''}" data-f="${t}">${TYPES[t] || t}</button>`).join('')}</div>
     ${list.map(it => `<button class="card item" data-open="${it.id}">${thumb(it)}<div class="t"><h3>${esc(it.name)}</h3><p>${esc(it.description)}</p><span class="num">${fromPrice(it)}</span></div><span class="plus" aria-hidden="true">+</span></button>`).join('') || '<p class="empty">مفيش أصناف هنا دلوقتي</p>'}`;
 }
 
@@ -82,8 +81,7 @@ function cartView() {
       <button class="btn wa">اطلب على واتساب</button>
       <p class="mut" style="text-align:center">الطلب هيتبعت رسالة واتساب، والحساب والتوصيل بنتفق عليهم هناك</p>
     </form>`;
-  const tomorrow = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
-  $('#date').min = tomorrow;
+  $('#date').min = new Date().toISOString().slice(0, 10);
   $('#f').onsubmit = e => {
     e.preventDefault();
     const c = Object.fromEntries(['name', 'phone', 'address', 'date', 'notes'].map(k => [k, $('#' + k).value.trim()]));

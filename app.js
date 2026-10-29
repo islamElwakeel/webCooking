@@ -1,5 +1,7 @@
 import { FIREBASE_CONFIG, WHATSAPP_NUMBER, KITCHEN_NAME } from './config.js';
 export { KITCHEN_NAME };
+// item type -> menu section name
+export const TYPES = { 'طبق': 'أطباق', 'طاجن': 'طواجن', 'صينية': 'صواني', 'سندوتش': 'ع الماشي', 'سلطة': 'سلطات ومقبلات' };
 
 export const money = n => n == null || n === '' ? 'السعر على الواتساب' : `${Number(n).toLocaleString('ar-EG')} ج.م`;
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
