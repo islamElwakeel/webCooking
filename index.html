@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2f3a1f">
+<title>مطبخ لولي</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;700&family=Tajawal:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="page" id="view"></main>
+<nav class="nav">
+  <a href="#" data-v="menu"><i>🏠</i>المنيو</a>
+  <a href="#cart" data-v="cart"><i>🛒</i>السلة<span class="badge" id="count" hidden></span></a>
+  <a href="#me" data-v="me"><i>👤</i>بياناتي</a>
+</nav>
+<div id="sheet"></div>
+<script type="module">
+import { KITCHEN_NAME, listItems, cart, cartTotals, orderMessage, whatsappUrl, money, esc, ls } from './app.js';
+
+const $ = s => document.querySelector(s), view = $('#view');
+let items = [], filter = 'الكل';
+const TYPES = ['الكل', 'طبق', 'طاجن', 'صينية'];
+const thumb = (it, cls = 'thumb') => `<div class="${cls}" style="${it.image ? `background-image:url('${it.image}')` : ''}">${it.image ? '' : '🍲'}</div>`;
+const fromPrice = it => { const p = it.sizes.map(s => s.price).filter(x => x != null && x !== '');
+  return p.length ? (it.sizes.length > 1 ? 'من ' : '') + money(Math.min(...p)) : money(null); };
+const toast = t => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.append(d); setTimeout(() => d.remove(), 1800); };
+const updateCount = () => { const n = cart.get().reduce((a, l) => a + l.qty, 0); $('#count').hidden = !n; $('#count').textContent = n; };
+
+function menu() {
+  const list = items.filter(x => !x.hidden && (filter === 'الكل' || x.type === filter));
+  view.innerHTML = `<div class="top"><h1>${esc(KITCHEN_NAME)}</h1></div>
+    <p class="mut">أكل بيتي بيتعمل مخصوص ليك، اطلب قبلها بيوم</p>
+    <div class="chips">${TYPES.map(t => `<button class="chip ${t === filter ? 'on' : ''}" data-f="${t}">${t === 'الكل' ? t : t === 'صينية' ? 'صواني' : t === 'طاجن' ? 'طواجن' : 'أطباق'}</button>`).join('')}</div>
+    ${list.map(it => `<button class="card item" data-open="${it.id}">${thumb(it)}<div class="t"><h3>${esc(it.name)}</h3><p>${esc(it.description)}</p><span class="num">${fromPrice(it)}</span></div><span class="plus" aria-hidden="true">+</span></button>`).join('') || '<p class="empty">مفيش أصناف هنا دلوقتي</p>'}`;
+}
+
+function openDish(id) {
+  const it = items.find(x => x.id === id); let qty = 1;
+  $('#sheet').innerHTML = `<div class="sheet" id="bg"><div role="dialog" aria-label="${esc(it.name)}">
+    ${thumb(it, 'hero')}
+    <div class="line"><h2>${esc(it.name)}</h2><button class="btn ghost small" id="x">إغلاق</button></div>
+    <p>${esc(it.description)}</p>
+    ${it.ingredients ? `<p class="mut"><b>المكونات:</b> ${esc(it.ingredients)}</p>` : ''}
+    ${it.weight ? `<p class="mut"><b>الوزن:</b> ${esc(it.weight)}</p>` : ''}
+    <span class="tag">${esc(it.type)}${it.prep ? ' · ⏱ يُطلب ' + esc(it.prep) : ''}</span>
+    ${it.sizes.length > 1 ? '<h3>اختار الحجم</h3>' : ''}
+    ${it.sizes.map((s, i) => `<label class="card size"><span class="row"><input type="radio" name="sz" value="${i}" ${i ? '' : 'checked'}> ${esc(s.label)}</span><span class="num">${money(s.price)}</span></label>`).join('')}
+    <div class="row"><div class="qty"><button id="m" aria-label="أقل">−</button><b id="q" class="num">1</b><button id="p" aria-label="أكتر">+</button></div>
+    <button class="btn grow" id="add">أضف للسلة</button></div></div></div>`;
+  const close = () => $('#sheet').innerHTML = '';
+  $('#x').onclick = close; $('#bg').onclick = e => e.target.id === 'bg' && close();
+  $('#m').onclick = () => $('#q').textContent = qty = Math.max(1, qty - 1);
+  $('#p').onclick = () => $('#q').textContent = ++qty;
+  $('#add').onclick = () => {
+    const size = +document.querySelector('[name=sz]:checked').value, c = cart.get();
+    const l = c.find(x => x.id === id && x.size === size);
+    l ? l.qty += qty : c.push({ id, size, qty });
+    cart.set(c); updateCount(); close(); toast('اتضاف للسلة');
+  };
+}
+
+function cartView() {
+  const t = cartTotals(cart.get(), items), me = ls.get('me', {});
+  if (!t.rows.length) return view.innerHTML = '<h1>السلة</h1><p class="empty">السلة فاضية. اختار من المنيو.</p><a class="btn dark" href="#">روح للمنيو</a>';
+  view.innerHTML = `<h1>السلة</h1>
+    ${t.rows.map((r, i) => `<div class="card item">${thumb(r)}<div class="t"><h3>${esc(r.name)}</h3><p>${esc(r.sizeLabel)}</p><span class="num">${r.price == null ? money(null) : money(r.price * r.qty)}</span></div>
+      <div class="qty"><button data-q="${i}" data-d="-1" aria-label="أقل">−</button><b class="num">${r.qty}</b><button data-q="${i}" data-d="1" aria-label="أكتر">+</button></div></div>`).join('')}
+    <div class="line"><h3>الإجمالي</h3><span class="num" style="font-size:20px">${money(t.total)}</span></div>
+    ${t.unpriced ? '<p class="note">في أصناف سعرها هيتحدد معاك على الواتساب.</p>' : ''}
+    <form id="f" class="card" style="padding:14px;display:grid;gap:10px">
+      <label class="f">الاسم<input id="name" required autocomplete="name" value="${esc(me.name)}"></label>
+      <label class="f">رقم الموبايل<input id="phone" required type="tel" autocomplete="tel" value="${esc(me.phone)}"></label>
+      <label class="f">العنوان بالتفصيل<textarea id="address" required autocomplete="street-address">${esc(me.address)}</textarea></label>
+      <label class="f">يوم التسليم<input id="date" type="date"></label>
+      <label class="f">ملاحظات<textarea id="notes"></textarea></label>
+      <label class="row" style="font-size:13px"><input type="checkbox" id="save" style="width:auto" ${me.name ? 'checked' : ''}> احفظ بياناتي على الموبايل ده للمرة الجاية</label>
+      <button class="btn wa">اطلب على واتساب</button>
+      <p class="mut" style="text-align:center">الطلب هيتبعت رسالة واتساب، والحساب والتوصيل بنتفق عليهم هناك</p>
+    </form>`;
+  const tomorrow = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
+  $('#date').min = tomorrow;
+  $('#f').onsubmit = e => {
+    e.preventDefault();
+    const c = Object.fromEntries(['name', 'phone', 'address', 'date', 'notes'].map(k => [k, $('#' + k).value.trim()]));
+    ls.set('me', $('#save').checked ? { name: c.name, phone: c.phone, address: c.address } : {});
+    location.href = whatsappUrl(orderMessage(cartTotals(cart.get(), items), c));
+  };
+}
+
+function me() {
+  const m = ls.get('me', {});
+  view.innerHTML = `<h1>بياناتي</h1><p class="mut">بياناتك بتتحفظ على الموبايل ده بس، عشان متكتبهاش كل مرة.</p>
+    <form id="f" class="card" style="padding:14px;display:grid;gap:10px">
+      <label class="f">الاسم<input id="name" autocomplete="name" value="${esc(m.name)}"></label>
+      <label class="f">رقم الموبايل<input id="phone" type="tel" autocomplete="tel" value="${esc(m.phone)}"></label>
+      <label class="f">العنوان<textarea id="address">${esc(m.address)}</textarea></label>
+      <button class="btn dark">احفظ</button></form>
+    <button class="btn red" id="clr">امسح السلة</button>`;
+  $('#f').onsubmit = e => { e.preventDefault(); ls.set('me', { name: $('#name').value, phone: $('#phone').value, address: $('#address').value }); toast('اتحفظ'); };
+  $('#clr').onclick = () => { cart.set([]); updateCount(); toast('السلة اتمسحت'); };
+}
+
+function route() {
+  const v = location.hash.slice(1) || 'menu';
+  document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('on', a.dataset.v === v));
+  ({ cart: cartView, me }[v] || menu)(); updateCount(); scrollTo(0, 0);
+}
+view.onclick = e => {
+  const f = e.target.closest('[data-f]'), o = e.target.closest('[data-open]'), q = e.target.closest('[data-q]');
+  if (f) { filter = f.dataset.f; menu(); }
+  if (o) openDish(o.dataset.open);
+  if (q) { const c = cartTotals(cart.get(), items).rows.map(({ id, size, qty }) => ({ id, size, qty })), r = c[q.dataset.q];
+    r.qty += +q.dataset.d; cart.set(c.filter(x => x.qty > 0)); cartView(); updateCount(); }
+};
+addEventListener('hashchange', route);
+view.innerHTML = '<p class="empty">جاري التحميل…</p>';
+try { items = await listItems(); route(); }
+catch (e) { view.innerHTML = '<p class="empty">مقدرناش نحمّل المنيو. اتأكد من النت وجرّب تاني.</p>'; console.error(e); }
+</script>
+</body>
+</html>

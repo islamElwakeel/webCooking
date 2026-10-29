@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2f3a1f">
+<meta name="robots" content="noindex">
+<title>لوحة التحكم - مطبخ لولي</title>
+<link rel="icon" href="icon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;700&family=Tajawal:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body style="padding-bottom:0">
+<main class="page" id="view"></main>
+<div id="sheet"></div>
+<script type="module">
+import { DEMO, listItems, saveItem, deleteItem, seedFirebase, onAdmin, login, logout, resizeImage, money, esc } from './app.js';
+
+const $ = s => document.querySelector(s), view = $('#view');
+let items = [];
+const toast = t => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; d.style.bottom = '24px'; document.body.append(d); setTimeout(() => d.remove(), 1800); };
+
+function loginView() {
+  view.innerHTML = `<h1>لوحة التحكم</h1><form id="f" class="card" style="padding:14px;display:grid;gap:10px">
+    <label class="f">الإيميل<input id="em" type="email" required autocomplete="username"></label>
+    <label class="f">الباسورد<input id="pw" type="password" required autocomplete="current-password"></label>
+    <p class="err" id="er"></p><button class="btn dark">دخول</button></form>`;
+  $('#f').onsubmit = async e => { e.preventDefault();
+    try { await login($('#em').value, $('#pw').value); } catch { $('#er').textContent = 'الإيميل أو الباسورد غلط'; } };
+}
+
+async function list() {
+  items = await listItems();
+  const hidden = items.filter(x => x.hidden).length;
+  view.innerHTML = `<div class="top"><h1>لوحة التحكم</h1><div class="row"><a class="btn ghost small" href="index.html">شوف المنيو</a>${DEMO ? '' : '<button class="btn ghost small" id="out">خروج</button>'}</div></div>
+    ${DEMO ? '<p class="note">وضع تجربة: التعديلات محفوظة على الجهاز ده بس. عشان الزباين يشوفوها لازم تربط Firebase (شوف README).</p>' : ''}
+    <div class="row"><div class="card grow" style="padding:10px">الأصناف<br><b class="num" style="font-size:22px">${items.length}</b></div>
+      <div class="card grow" style="padding:10px">مخفي<br><b class="num" style="font-size:22px">${hidden}</b></div></div>
+    <button class="btn" id="new">+ صنف جديد</button>
+    ${!items.length && !DEMO ? '<button class="btn ghost" id="seed">ضيف الأصناف الجاهزة (١٣ صنف)</button>' : ''}
+    ${items.map(it => `<div class="card item" style="cursor:default">
+      <div class="thumb" style="width:54px;height:54px;font-size:22px;${it.image ? `background-image:url('${it.image}')` : ''}">${it.image ? '' : '🍲'}</div>
+      <div class="t"><h3>${esc(it.name)}</h3><span><span class="pill ${it.hidden ? 'off-p' : 'on-p'}">${esc(it.type)} · ${it.hidden ? 'مخفي' : 'ظاهر'}</span></span>
+        <p>${it.sizes.map(s => `${esc(s.label)}: ${money(s.price)}`).join(' / ')}</p></div>
+      <div style="display:grid;gap:4px"><button class="btn ghost small" data-e="${it.id}">تعديل</button>
+        <button class="btn ghost small" data-h="${it.id}">${it.hidden ? 'إظهار' : 'إخفاء'}</button></div></div>`).join('')}`;
+  $('#new').onclick = () => form();
+  $('#out') && ($('#out').onclick = logout);
+  $('#seed') && ($('#seed').onclick = async () => { $('#seed').disabled = true; await seedFirebase(); list(); });
+}
+
+view.onclick = async e => {
+  const ed = e.target.closest('[data-e]'), h = e.target.closest('[data-h]');
+  if (ed) form(items.find(x => x.id === ed.dataset.e));
+  if (h) { const it = items.find(x => x.id === h.dataset.h); h.disabled = true;
+    try { await saveItem({ ...it, hidden: !it.hidden }); toast(it.hidden ? 'الصنف ظاهر دلوقتي' : 'الصنف اتخفى من المنيو'); }
+    catch (err) { toast(err.message || 'حصلت مشكلة، جرّب تاني'); }
+    list(); }
+};
+
+function form(it = { name: '', type: 'طبق', description: '', ingredients: '', weight: '', prep: 'قبلها بيوم', image: '', sizes: [{ label: 'طبق', price: '' }], hidden: false }) {
+  let image = it.image;
+  const sizeRow = (s = { label: '', price: '' }) => `<div class="row sz"><input class="grow" placeholder="الحجم (مثلاً نص كيلو)" value="${esc(s.label)}" required>
+    <input type="number" min="0" inputmode="numeric" placeholder="السعر" value="${s.price ?? ''}" style="width:100px"><button type="button" class="btn red small" data-rm aria-label="امسح الحجم">×</button></div>`;
+  $('#sheet').innerHTML = `<div class="sheet"><div role="dialog" aria-label="بيانات الصنف"><form id="f" style="display:grid;gap:10px;padding-top:16px">
+    <div class="line"><h2>${it.id ? 'تعديل صنف' : 'صنف جديد'}</h2><button type="button" class="btn ghost small" id="x">إلغاء</button></div>
+    <label class="f">الصورة<div class="row"><div class="thumb" id="pv" style="${image ? `background-image:url('${image}')` : ''}">${image ? '' : '📷'}</div><input type="file" id="img" accept="image/*"></div></label>
+    <label class="f">اسم الصنف<input id="name" required value="${esc(it.name)}"></label>
+    <label class="f">النوع<select id="type">${['طبق', 'طاجن', 'صينية'].map(t => `<option ${t === it.type ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+    <label class="f">تفاصيل الطبق<textarea id="description">${esc(it.description)}</textarea></label>
+    <label class="f">المكونات<textarea id="ingredients">${esc(it.ingredients)}</textarea></label>
+    <label class="f">الوزن<input id="weight" placeholder="مثلاً ٥٠٠ جرام" value="${esc(it.weight)}"></label>
+    <label class="f">وقت التحضير<input id="prep" value="${esc(it.prep)}"></label>
+    <div class="f" style="font-size:13px;font-weight:500">الأحجام والأسعار <span class="mut">(سيب السعر فاضي لو هيتحدد على الواتساب)</span></div>
+    <div id="sizes" style="display:grid;gap:6px">${it.sizes.map(sizeRow).join('')}</div>
+    <button type="button" class="btn ghost small" id="addsz">+ حجم تاني</button>
+    <label class="row" style="font-size:14px"><input type="checkbox" id="hidden" style="width:auto" ${it.hidden ? 'checked' : ''}> مخفي من المنيو</label>
+    <p class="err" id="er"></p>
+    <button class="btn dark" id="sv">حفظ</button>
+    ${it.id ? '<button type="button" class="btn red" id="del">حذف الصنف</button>' : ''}
+  </form></div></div>`;
+  const close = () => $('#sheet').innerHTML = '';
+  $('#x').onclick = close;
+  $('#addsz').onclick = () => $('#sizes').insertAdjacentHTML('beforeend', sizeRow());
+  $('#sizes').onclick = e => e.target.closest('[data-rm]') && $('#sizes').children.length > 1 && e.target.closest('.sz').remove();
+  $('#img').onchange = async e => { try { image = await resizeImage(e.target.files[0]);
+    $('#pv').style.backgroundImage = `url('${image}')`; $('#pv').textContent = ''; } catch (err) { $('#er').textContent = err.message; } };
+  if (it.id) $('#del').onclick = async function () {
+    if (this.dataset.sure) { await deleteItem(it.id); close(); toast('الصنف اتحذف'); return list(); }
+    this.dataset.sure = 1; this.textContent = 'متأكد؟ اضغط تاني للحذف';
+  };
+  $('#f').onsubmit = async e => {
+    e.preventDefault(); $('#sv').disabled = true;
+    const v = k => $('#' + k).value.trim();
+    const sizes = [...document.querySelectorAll('.sz')].map(r => { const [l, p] = r.querySelectorAll('input');
+      return { label: l.value.trim(), price: p.value === '' ? null : Number(p.value) }; });
+    try {
+      await saveItem({ ...it, name: v('name'), type: v('type'), description: v('description'), ingredients: v('ingredients'),
+        weight: v('weight'), prep: v('prep'), image, sizes, hidden: $('#hidden').checked });
+      close(); toast('اتحفظ'); list();
+    } catch (err) { $('#er').textContent = err.message || 'الحفظ فشل، جرّب تاني'; $('#sv').disabled = false; }
+  };
+}
+
+onAdmin(ok => ok ? list().catch(e => { view.innerHTML = '<p class="empty">مقدرناش نحمّل الأصناف.</p>'; console.error(e); }) : loginView());
+</script>
+</body>
+</html>
