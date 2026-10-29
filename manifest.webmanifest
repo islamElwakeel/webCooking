@@ -1,2 +1,2 @@
 {"name":"مطبخ لولي","short_name":"لولي","start_url":"./index.html","display":"standalone","dir":"rtl","lang":"ar",
- "background_color":"#eef0e4","theme_color":"#2f3a1f","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
+ "background_color":"#fbf3ea","theme_color":"#4a2c1d","icons":[{"src":"images/avatar.jpg","sizes":"512x512","type":"image/jpeg","purpose":"any"}]}

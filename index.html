@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#2f3a1f">
+<meta name="theme-color" content="#4a2c1d">
 <title>مطبخ لولي</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon.svg">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;700&family=Tajawal:wght@400;500;700&display=swap">
+<link rel="icon" href="images/avatar.jpg"><link rel="apple-touch-icon" href="images/avatar.jpg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marhey:wght@500;600&family=El+Messiri:wght@500;700&family=Tajawal:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,7 +19,7 @@
 </nav>
 <div id="sheet"></div>
 <script type="module">
-import { KITCHEN_NAME, listItems, cart, cartTotals, orderMessage, whatsappUrl, getSettings, money, esc, ls } from './app.js';
+import { listItems, cart, cartTotals, orderMessage, whatsappUrl, getSettings, money, esc, ls } from './app.js';
 
 const $ = s => document.querySelector(s), view = $('#view');
 let items = [], settings, filter = 'الكل';
@@ -32,8 +32,9 @@ const updateCount = () => { const n = cart.get().reduce((a, l) => a + l.qty, 0);
 
 function menu() {
   const list = items.filter(x => !x.hidden && (filter === 'الكل' || x.type === filter));
-  view.innerHTML = `<div class="top"><h1>${esc(KITCHEN_NAME)}</h1></div>
-    <p class="mut">أكل بيتي بيتعمل مخصوص ليك، اطلب قبلها بيوم</p>
+  view.innerHTML = `<div class="brand"><img src="images/avatar.jpg" alt=""><div><h1>مطبخ <b>لولي</b> ♥</h1><p>من قلبي لبيتك</p></div></div>
+    <div class="perks"><span>🏠 أطباق منزلية</span><span>🌿 مكونات طازجة</span><span>♥ مطبخ نظيف</span><span>🍽 للعائلات والعزومات</span></div>
+    <p class="mut">كل الأكل بيتعمل مخصوص ليك، اطلب قبلها بيوم</p>
     <div class="chips">${TYPES.map(t => `<button class="chip ${t === filter ? 'on' : ''}" data-f="${t}">${t === 'الكل' ? t : t === 'صينية' ? 'صواني' : t === 'طاجن' ? 'طواجن' : 'أطباق'}</button>`).join('')}</div>
     ${list.map(it => `<button class="card item" data-open="${it.id}">${thumb(it)}<div class="t"><h3>${esc(it.name)}</h3><p>${esc(it.description)}</p><span class="num">${fromPrice(it)}</span></div><span class="plus" aria-hidden="true">+</span></button>`).join('') || '<p class="empty">مفيش أصناف هنا دلوقتي</p>'}`;
 }
