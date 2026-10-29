@@ -33,8 +33,8 @@ const IMAGES = {
   'بيكاتا فراخ': 'chicken-piccata', 'نجرسكو': 'negresco', 'فتة باللحمة': 'fatta', 'لوبيا باللحمة': 'black-eyed-peas',
   'فاصوليا باللحمة': 'beans', 'طاجن أرز معمر': 'rice-tagine', 'بسلة بالجزر واللحمة': 'peas',
   'طاجن بامية باللحمة': 'okra-tagine', 'طاجن لحمة بالبصل': 'onion-tagine', 'صينية مكرونة بشاميل': 'bechamel',
-  'مكرونة بينك صوص وكوردن بلو': 'pink-pasta', 'بيكاتا لحم': 'beef-piccata',
+  'مكرونة بينك صوص وكوردن بلو': 'pink-pasta', 'بيكاتا لحم': 'beef-piccata', 'مكرونة بكفتة داود باشا': 'dawood-basha',
 };
 for (const x of SEED) if (IMAGES[x.name]) x.image = `images/${IMAGES[x.name]}.jpg?v=3`;
 // Bump when SEED changes so demo devices reload it.
-export const SEED_VERSION = 6;
+export const SEED_VERSION = 7;
