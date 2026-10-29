@@ -32,7 +32,7 @@ const updateCount = () => { const n = cart.get().reduce((a, l) => a + l.qty, 0);
 function menu() {
   const list = items.filter(x => !x.hidden && (filter === 'الكل' || x.type === filter));
   view.innerHTML = `<div class="brand"><img src="images/avatar.jpg" alt=""><div><h1>مطبخ <b>لولي</b> ♥</h1><p>من قلبي لبيتك</p></div></div>
-    <div class="perks"><span>🏠 أطباق منزلية</span><span>🌿 مكونات طازجة</span><span>♥ مطبخ نظيف</span><span>🍽 للعائلات والعزومات</span></div>
+    <div class="perks"><span>🏠 أطباق منزلية</span><span>🥩 لحمة بلدي ١٠٠٪</span><span>🐔 فراخ فريش</span><span>🌿 مكونات طازجة</span><span>♥ مطبخ نظيف</span><span>🍽 للعائلات والعزومات</span></div>
     <p class="mut">كل الأكل بيتعمل مخصوص ليك، الأطباق بتتطلب قبلها بيوم، والسندوتشات بتجهز خلال ساعتين</p>
     <div class="chips">${['الكل', ...Object.keys(TYPES)].map(t => `<button class="chip ${t === filter ? 'on' : ''}" data-f="${t}">${TYPES[t] || t}</button>`).join('')}</div>
     ${list.map(it => `<button class="card item" data-open="${it.id}">${thumb(it)}<div class="t"><h3>${esc(it.name)}</h3><p>${esc(it.description)}</p><span class="num">${fromPrice(it)}</span></div><span class="plus" aria-hidden="true">+</span></button>`).join('') || '<p class="empty">مفيش أصناف هنا دلوقتي</p>'}`;
